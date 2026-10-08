@@ -3,21 +3,13 @@ import pandas as pd
 import plotly.express as px
 import re 
 
-import sys
-import os
-# 1. Obtiene la ruta absoluta de la carpeta 'streamlit' (donde está app.py)
-ruta_actual = os.path.dirname(os.path.abspath(__file__))
-# 2. Sube u nivel hacia atrás para llegar a la raíz del proyecto ('Project InmoData')
-ruta_raiz = os.path.abspath(os.path.join(ruta_actual, ".."))
-# 3. Agrega la ruta raíz al sistema de Python si no está presente
-if ruta_raiz not in sys.path:
-    sys.path.append(ruta_raiz)
-
-from notebooks.procesamiento import df_limpio,df_unido,df_censo
-from notebooks.procesamiento import tabla_pivot
+from utils.backend import obtener_df_limpio 
+from utils.backend import tabla_pivot
 
 st.set_page_config(page_title="Mi página base", layout="wide")
 
+
+df_limpio = obtener_df_limpio()
 # ==================================================
 # 2. GRÁFICOS
 # Cada gráfico es una función aparte, así agregás otro fácil
@@ -175,11 +167,11 @@ grafico = st.radio("Tipo de gráfico", ["barras", "torta"])
 amb_antig_precio_m2_mean = tabla_pivot(df_limpio,"ambientes","antiguedad_info","precio_m2_tot","mean",5,5)
 fig = armar_grafico(amb_antig_precio_m2_mean, grafico, es_pivot=True)
 
-st.plotly_chart(fig, width=True,key="amb_antig_precio_m2_mean")
+st.plotly_chart(fig, width="stretch",key="amb_antig_precio_m2_mean")
 
 amb_antig_precio_m2_count = tabla_pivot(df_limpio,"ambientes","antiguedad_info","precio_m2_tot","count",5,5)
 fig = armar_grafico(amb_antig_precio_m2_count, grafico, es_pivot=True)
-st.plotly_chart(fig, width=True)
+st.plotly_chart(fig, width="stretch")
 
 # Valores en Tabla
 st.subheader("Datos", divider="blue")

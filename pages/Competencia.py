@@ -25,10 +25,11 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from notebooks.procesamiento import df_limpio
+from utils.backend import obtener_df_limpio
 st.set_page_config(layout="wide")
 
-
+df_limpio = obtener_df_limpio()
+df_limpio.loc[df_limpio["baños"] == 0, "baños"] = 1
 # =====================================================================
 # CONFIGURACIÓN GENERAL (se puede tocar libremente)
 # =====================================================================
@@ -258,17 +259,25 @@ def grafico_barras(serie, titulo, nombre_valor, resaltar=None):
     return fig
 
 
-def mostrar_torta_y_barras(fig_torta, fig_barras, en_paralelo=GRAFICOS_EN_PARALELO):
+def mostrar_torta_y_barras(fig_torta, fig_barras, en_paralelo=GRAFICOS_EN_PARALELO,torta=True):
     """Muestra los dos gráficos.
     en_paralelo=True  -> torta a la izquierda, barras a la derecha
     en_paralelo=False -> torta arriba, barras abajo"""
-    if en_paralelo:
-        col_izq, col_der = st.columns(2)
-        col_izq.plotly_chart(fig_torta, width="stretch")
-        col_der.plotly_chart(fig_barras, width="stretch")
-    else:
-        st.plotly_chart(fig_torta, width="stretch")
-        st.plotly_chart(fig_barras, width="stretch")
+    if torta:
+        if en_paralelo:
+            col_izq, col_der = st.columns(2)
+            col_izq.plotly_chart(fig_torta, width="stretch")
+            col_der.plotly_chart(fig_barras, width="stretch")
+        else:
+            st.plotly_chart(fig_torta, width="stretch")
+            st.plotly_chart(fig_barras, width="stretch")
+    else: 
+        if en_paralelo:
+            col_izq, col_der = st.columns(2)
+            col_der.plotly_chart(fig_barras, width="stretch")
+        else:
+            st.plotly_chart(fig_barras, width="stretch")
+
 
 
 def mostrar_tabla_ranking(serie, promedio, color):
@@ -355,7 +364,7 @@ def seccion_promedios(df):
     # en promedios no se agrupa el resto en 'Otras' (sumar promedios no tiene sentido)
     fig_torta = grafico_torta(serie, f"{tipo}: top {CANT_EN_GRAFICOS} en %", agrupar_resto=False)
     fig_barras = grafico_barras(serie, f"{tipo}: top {CANT_EN_GRAFICOS} inmobiliarias", tipo)
-    mostrar_torta_y_barras(fig_torta, fig_barras)
+    mostrar_torta_y_barras(fig_torta, fig_barras,torta=False)
 
 
 def seccion_comparativa(df):
@@ -381,12 +390,18 @@ def seccion_comparativa(df):
 
 def seccion_dispersion(df):
     st.subheader("Evolución del precio")
-    eje = st.radio("Ver el precio según", ["M2 totales", "Antigüedad"],
+    eje = st.radio("Ver el precio según", ["M2 totales", "Antigüedad","Ambientes","Baños"],
                    horizontal=True, key="eje_dispersion")
     ocultar_extremos = st.checkbox("Ocultar valores extremos (1% más alto)",
                                    value=True, key="ocultar_extremos")
-
-    columna_x = "supCub_value" if eje == "M2 totales" else "antiguedad"
+    if eje == "M2 totales":
+        columna_x = "supCub_value" 
+    elif eje == "Ambientes":
+        columna_x = "ambientes"
+    elif eje == "Baños":
+        columna_x = "baños"
+    elif eje == "Antigüedad":
+        columna_x = "antiguedad"
     datos = df
 
     if ocultar_extremos:
@@ -414,7 +429,14 @@ def seccion_dispersion(df):
     st.plotly_chart(fig, width="stretch")
 
     if pendiente is not None:
-        unidad = "m2" if eje == "M2 totales" else "año de antigüedad"
+        if eje == "M2 totales":
+            unidad = "M2" 
+        elif eje == "Ambientes":
+            unidad = "ambiente"
+        elif eje == "Baños":
+            unidad = "baño"
+        elif eje == "Antigüedad":
+            unidad = "año"
         st.caption(f"Según la tendencia, por cada {unidad} más el precio cambia en promedio "
                    f"USD {formato_diferencia(pendiente)}.")
 
