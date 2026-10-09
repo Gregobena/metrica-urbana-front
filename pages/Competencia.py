@@ -26,9 +26,10 @@ import plotly.express as px
 import streamlit as st
 
 from utils.backend import obtener_df_limpio
+from utils.backend import aplicar_filtro_global 
+df_limpio,tipo = aplicar_filtro_global(obtener_df_limpio())
 st.set_page_config(layout="wide")
 
-df_limpio = obtener_df_limpio()
 df_limpio.loc[df_limpio["baños"] == 0, "baños"] = 1
 # =====================================================================
 # CONFIGURACIÓN GENERAL (se puede tocar libremente)

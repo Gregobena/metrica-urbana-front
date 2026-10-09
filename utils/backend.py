@@ -10,7 +10,6 @@ def iniciar_conexion():
     return MongoClient(uri, tlsCAFile=certifi.where())
 
 
-# URI = "mongodb+srv://gregoriobenavidez06_db_user:P14kInm0POYegw4R@metrica.9fsxkgg.mongodb.net/?appName=Metrica"
 # Le indicamos a pymongo dónde están los certificados
 
 @st.cache_data(ttl=7200)
@@ -30,6 +29,22 @@ def obtener_df_limpio():
         df_limpio['_id'] = df_limpio['_id'].astype(str)
     
     return df_limpio
+
+def aplicar_filtro_global(df_limpio):
+    st.sidebar.header("Filtros Globales")
+    
+    opciones = ["Todas"] + list(df_limpio["realEstateType"].dropna().unique())
+    
+    st.sidebar.selectbox(
+        "Tipo de Propiedad:",
+        options=opciones,
+        key="filtro_tipo_inmueble"
+    )
+    
+    if st.session_state["filtro_tipo_inmueble"] == "Todas":
+        return df_limpio.copy(), st.session_state["filtro_tipo_inmueble"]
+    else:
+        return df_limpio[df_limpio["realEstateType"] == st.session_state["filtro_tipo_inmueble"]].copy(), st.session_state["filtro_tipo_inmueble"]
 
 @st.cache_data(ttl=7200)
 def obtener_df_censo():

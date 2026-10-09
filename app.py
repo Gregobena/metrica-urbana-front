@@ -3,13 +3,13 @@ import pandas as pd
 import plotly.express as px
 import re 
 
-from utils.backend import obtener_df_limpio 
 from utils.backend import tabla_pivot
 
 st.set_page_config(page_title="Mi página base", layout="wide")
+from utils.backend import obtener_df_limpio 
+from utils.backend import aplicar_filtro_global 
+df_limpio,tipo = aplicar_filtro_global(obtener_df_limpio())
 
-
-df_limpio = obtener_df_limpio()
 # ==================================================
 # 2. GRÁFICOS
 # Cada gráfico es una función aparte, así agregás otro fácil
@@ -94,9 +94,9 @@ def tarjeta_precios(df, col_ambientes, col_antiguedad, col_precio_m2, col_precio
     for antiguedad in antiguedades:
 
         if antiguedad not in ["En construcción","A estrenar"]:
-            st.subheader(f"Departamento - {antiguedad} Años", divider="blue")
+            st.subheader(f"{tipo} - {antiguedad} Años", divider="blue")
         else:
-            st.subheader(f"Departamento - {antiguedad} ", divider="red")
+            st.subheader(f"{tipo} - {antiguedad} ", divider="red")
 
         # Filtramos y agrupamos por cantidad de ambientes
         df_ant = df[(df[col_antiguedad] == antiguedad) & (df["ambientes"] < 6)]
