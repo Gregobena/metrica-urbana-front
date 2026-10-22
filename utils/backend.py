@@ -3,6 +3,7 @@ from pymongo import ReplaceOne
 import certifi
 import streamlit as st
 import pandas as pd 
+
 @st.cache_resource
 def iniciar_conexion():
     uri = st.secrets["mongo"]["uri"]
@@ -13,12 +14,12 @@ def iniciar_conexion():
 # Le indicamos a pymongo dónde están los certificados
 
 @st.cache_data(ttl=7200)
-def obtener_df_limpio():
+def obtener_df_limpio(COLECCION="inmuebles"):
 
     cliente = iniciar_conexion()
 
     db = cliente["metrica_urbana"]
-    coleccion = db["inmuebles"]
+    coleccion = db[COLECCION]
 
     cursor = coleccion.find({"status":"ONLINE"})
     datos = list(cursor)
