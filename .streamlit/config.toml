@@ -1,0 +1,6 @@
+[theme]
+# primaryColor es lo que pinta el fondo de los tags del multiselect
+primaryColor = "#F95551" 
+backgroundColor = "#171B26" 
+secondaryBackgroundColor = "#212736" # El color de fondo del sidebar
+textColor = "#FFFFFF"

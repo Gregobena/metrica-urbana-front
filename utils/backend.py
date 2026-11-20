@@ -6,7 +6,7 @@ import pandas as pd
 
 @st.cache_resource
 def iniciar_conexion():
-    uri = st.secrets["mongo"]["uri"]
+    uri = "mongodb+srv://pc_grego:8s8X2sj6cFxEXgt7@metrica.9fsxkgg.mongodb.net/metrica_urbana?retryWrites=true&w=majority"
     # Es obligatorio pasar tlsCAFile=certifi.where() para evitar el bloqueo SSL
     return MongoClient(uri, tlsCAFile=certifi.where())
 
@@ -32,20 +32,47 @@ def obtener_df_limpio(COLECCION="inmuebles"):
     return df_limpio
 
 def aplicar_filtro_global(df_limpio):
-    st.sidebar.header("Filtros Globales")
+    st.sidebar.header("▽ Filtros Globales")
     
     opciones = ["Todas"] + list(df_limpio["realEstateType"].dropna().unique())
+    
+    # Evitamos que "Casco Urbano" se duplique si ya viene en el DataFrame
+    zonas_unicas = [z for z in df_limpio["zona"].dropna().unique() if z != "Casco Urbano"]
+    zonas_casco = ["Plaza San Martin - 1, 7, 44 y 60", "Parque Alberti - 19, 31, 32 y 44","Barrio Hipodromo - 122, 1, 32 y 44","Parque Saveedra - 7, 19, 60 y 72","Plaza Moreno Sur - 13, 19, 44 y 60","Barrio Mondongo - 122, 1 60 y 72","Parque Castelli - 19, 31, 60 y 72","Plaza Belgrano - 7, 19, 32 y 44","Plaza Alsina - 1, 7, 32 y 44","Plaza Moreno Norte - 8, 13, 44 y 60","El Bosque","Parque Vucetich - 19, 31, 44 y 60","Plaza España - 1, 7, 60 y 72"]
+    opciones_zonas = ["Todas", "Casco Urbano"] + zonas_unicas
     
     st.sidebar.selectbox(
         "Tipo de Propiedad:",
         options=opciones,
         key="filtro_tipo_inmueble"
     )
+
+    st.sidebar.selectbox(
+        "Zona de La Plata:",
+        options=opciones_zonas,
+        key="filtro_tipo_zona"
+    )
     
-    if st.session_state["filtro_tipo_inmueble"] == "Todas":
-        return df_limpio.copy(), st.session_state["filtro_tipo_inmueble"]
-    else:
-        return df_limpio[df_limpio["realEstateType"] == st.session_state["filtro_tipo_inmueble"]].copy(), st.session_state["filtro_tipo_inmueble"]
+    # Guardamos las selecciones en variables para que el código sea más legible
+    tipo_sel = st.session_state["filtro_tipo_inmueble"]
+    zona_sel = st.session_state["filtro_tipo_zona"]
+    
+    # 1. Empezamos con una copia completa
+    df_filtrado = df_limpio.copy()
+    
+    # 2. Si eligió un tipo específico, recortamos el DataFrame
+    if tipo_sel != "Todas":
+        df_filtrado = df_filtrado[df_filtrado["realEstateType"] == tipo_sel]
+        
+    # 3. Si eligió una zona específica, volvemos a recortar sobre lo que ya quedó
+    if zona_sel == "Casco Urbano":
+        df_filtrado = df_filtrado[df_filtrado["zona"].isin(zonas_casco)]
+    elif zona_sel != "Todas":
+        df_filtrado = df_filtrado[df_filtrado["zona"] == zona_sel]
+        
+    # Retornamos el DataFrame resultante y las variables (puedes retornar ambas si las necesitas afuera)
+    return df_filtrado, tipo_sel
+
 
 @st.cache_data(ttl=7200)
 def obtener_df_censo():
